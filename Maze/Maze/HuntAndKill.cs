@@ -15,7 +15,9 @@ namespace Maze
         /* ---------------------------------------------------------------------------------- */
 
         // GAME MAP & COORDINATES
-        private string[,] gameMap = new string[21, 69];
+        public string[,] gameMap = new string[21, 39];
+        public string[,] preloadGameMap = new string[5, 5];
+        public int[] startCoords = new int[] { 1, 1 };
         private int[] currentCoords = new int[] { 1, 1 };
 
         // GAME STATE
@@ -25,12 +27,12 @@ namespace Maze
         // CONFIGURATION
         private int delay = 0;
         private bool doRandomizeBorders = false;
-        private bool coloredOutput = true;
+        public bool coloredOutput = true;
         private bool showProgress = false;
         private bool measureSpeed = true;
         private char wallSymbol = '#';
-        private char blankSymbol = ' ';
-        private ConsoleColor[] outputColors = new ConsoleColor[] { ConsoleColor.Black, ConsoleColor.DarkGray };
+        public char blankSymbol = ' ';
+        public ConsoleColor[] outputColors = new ConsoleColor[] { ConsoleColor.Black, ConsoleColor.DarkGray, ConsoleColor.Blue };
 
         // RANDOMIZATION CHANCES
         private int[] randomizeBordersChance = new int[] { 1, 8 };
@@ -104,6 +106,18 @@ namespace Maze
         {
 
         }
+        
+        /// <summary>
+        /// Preloads the maze generation to allow for faster generation
+        /// </summary>
+        public void PreloadGeneration()
+        {
+            string[,] tempArray = gameMap;
+            gameMap = preloadGameMap;
+            GenerateMaze();
+            gameMap = tempArray;
+            Console.Clear();
+        }
 
         /// <summary>
         /// Initializing and commencing the maze generation 
@@ -122,8 +136,9 @@ namespace Maze
             //Console.SetBufferSize(gameMap.GetLength(1), gameMap.GetLength(0));
 
             if (!showProgress) { Console.WriteLine("Generating maze"); }
-            if (measureSpeed) { stopwatch.Start(); } // Starts the timer if measureSpeed is true
+            if (measureSpeed) { stopwatch.Reset(); stopwatch.Start(); } // Starts the timer if measureSpeed is true
 
+            currentCoords = startCoords;
             gameMap[currentCoords[0], currentCoords[1]] = blankSymbol.ToString(); // Makes the start position blank
             Kill(); 
         }
@@ -164,23 +179,23 @@ namespace Maze
         }
 
         // Clears and outputs the completed maze as well as showing additional information and randomizes the borders if set
-        private async void EndGeneration()
+        private void EndGeneration()
         {
             hasEnded = true;
             Console.Clear();
 
-            if (measureSpeed && stopwatch.IsRunning) { stopwatch.Stop(); } // Stops the stopwatch if measureSpeed is true and a stopwatch instance is running
-            if (doRandomizeBorders) { await MazeBuilder.RandomizeBorders(gameMap,random, randomizeBordersChance, wallSymbol, blankSymbol); } // If doRandomizeBorders, wait for RandomizeBorders to finish randomizing the borders of gameMap
+            if (measureSpeed && stopwatch.IsRunning) { stopwatch.Stop();  } // Stops the stopwatch if measureSpeed is true and a stopwatch instance is running
+            if (doRandomizeBorders) { MazeBuilder.RandomizeBorders(gameMap,random, randomizeBordersChance, wallSymbol, blankSymbol); } // If doRandomizeBorders, wait for RandomizeBorders to finish randomizing the borders of gameMap
             MazeBuilder.WriteMap(gameMap, coloredOutput, showProgress, hasEnded, outputColors, wallSymbol, blankSymbol);
 
-            Console.WriteLine("\r\nGeneration complete.\r\n");
+            Console.WriteLine("\r\nGeneration complete.");
             isActive = false;
 
             if (measureSpeed && stopwatch.Elapsed != TimeSpan.Zero) // If measureSpeed is true and stopwatch.Elapsed is not 0, aka it has recorded the time correctly, output the speed information
             {
-                Console.WriteLine("----- Speed measurement -----");
+                Console.WriteLine("\r\n----- Speed measurement -----");
                 Console.WriteLine("Seconds: " + Math.Round(stopwatch.Elapsed.TotalSeconds, 3));
-                Console.WriteLine("Milliseconds: " + Math.Round(stopwatch.Elapsed.TotalMilliseconds, 3));
+                Console.WriteLine("Milliseconds: " + Math.Round(stopwatch.Elapsed.TotalMilliseconds, 3) + "\r\n");
             }
         }
 

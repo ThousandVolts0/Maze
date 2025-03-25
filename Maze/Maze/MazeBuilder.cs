@@ -8,6 +8,7 @@ namespace Maze
 {
     internal static class MazeBuilder
     {
+        public static char playerSymbol;
         public static void InitializeMap(string[,] gameMap, char wallSymbol)
         {
             for (int i = 0; i < gameMap.GetLength(0); i++)
@@ -20,7 +21,7 @@ namespace Maze
         }
 
         // Randomizes each part of the border to allow for entrances and exits
-        public static Task RandomizeBorders(string[,] gameMap, Random random, int[] randomizeBordersChance, char wallSymbol, char blankSymbol)
+        public static void RandomizeBorders(string[,] gameMap, Random random, int[] randomizeBordersChance, char wallSymbol, char blankSymbol)
         {
             for (int i = 0; i < gameMap.GetLength(0); i++)
             {
@@ -40,12 +41,11 @@ namespace Maze
                     }
                 }
             }
-            return Task.CompletedTask;
         }
 
         public static void WriteMap(string[,] gameMap, bool coloredOutput = false, bool showProgress = false, bool hasEnded = false, ConsoleColor[]? outputColors = null, char wallSymbol = '#', char blankSymbol = ' ')
         {
-            if (outputColors == null) { outputColors = new ConsoleColor[] { ConsoleColor.White, ConsoleColor.White }; } // Sets default value for outputColors
+            if (outputColors == null) { outputColors = new ConsoleColor[] { ConsoleColor.White, ConsoleColor.White, ConsoleColor.Blue }; } // Sets default value for outputColors
 
             for (int i = 0; i < gameMap.GetLength(0); i++)
             {
@@ -63,6 +63,12 @@ namespace Maze
                         else if (gameMap[i, j] == wallSymbol.ToString())
                         {
                             Console.BackgroundColor = outputColors[1];
+                            Console.Write(" ");
+                            Console.ResetColor();
+                        }
+                        else if (gameMap[i,j] == playerSymbol.ToString())
+                        {
+                            Console.BackgroundColor = outputColors[2];
                             Console.Write(" ");
                             Console.ResetColor();
                         }

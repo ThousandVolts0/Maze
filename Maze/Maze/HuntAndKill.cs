@@ -15,54 +15,68 @@ namespace Maze
         /* ---------------------------------------------------------------------------------- */
 
         // GAME MAP & COORDINATES
-        public string[,] gameMap = new string[21, 39];
-        public string[,] preloadGameMap = new string[5, 5];
-        public int[] startCoords = new int[] { 1, 1 };
+        public string[,] gameMap { get; private set; } = new string[21, 39];
+        private string[,] preloadGameMap = new string[5, 5];
+        public int[] startCoords { get; private set; } = new int[] { 1, 1 };
         private int[] currentCoords = new int[] { 1, 1 };
 
         // GAME STATE
-        private bool hasEnded = false;
-        private bool isActive = false;
+        public bool hasEnded { get; private set; } = false;
 
         // CONFIGURATION
         private int delay = 0;
         private bool doRandomizeBorders = false;
-        public bool coloredOutput = true;
-        private bool showProgress = false;
+        public bool coloredOutput { get; private set; } = true;
+        public bool showProgress { get; private set; } = false;
+        private bool isPreloading = true;
         private bool measureSpeed = true;
-        private char wallSymbol = '#';
-        public char blankSymbol = ' ';
-        public ConsoleColor[] outputColors = new ConsoleColor[] { ConsoleColor.Black, ConsoleColor.DarkGray, ConsoleColor.Blue };
+        public char wallSymbol { get; private set; } = '#';
+        public char blankSymbol { get; private set; } = ' ';
+        public char playerSymbol { get; private set; } = 'X';
+        public ConsoleColor[] outputColors { get; private set; } = new ConsoleColor[] { ConsoleColor.Black, ConsoleColor.DarkGray, ConsoleColor.Blue };
 
         // RANDOMIZATION CHANCES
-        private int[] randomizeBordersChance = new int[] { 1, 8 };
+        public int[] borderRandomizationChance { get; private set; } = new int[] { 1, 8 };
 
         // UTILITY
-        private Random random = new Random();
+        public Random random { get; private set; } = new Random();
         private Stopwatch stopwatch = new Stopwatch();
 
         /* ---------------------------------------------------------------------------------- */
 
-        // If pos in gameMap is a wall, return true
+        /// <summary>
+        /// If pos in gameMap is a wall, return true
+        /// </summary>
         private bool isWall(int[] pos)
         {
             return (gameMap[pos[0], pos[1]] == wallSymbol.ToString());
         }
 
-        // If pos is within the bounds of gameMap, return true
+        public void ModifyMap(int[] pos, char symbol)
+        {
+            gameMap[pos[0], pos[1]] = symbol.ToString();
+        }
+
+        /// <summary>
+        /// If pos is within the bounds of gameMap, return true
+        /// </summary>
         private bool isWithinBounds(int[] pos)
         {
             return pos[0] >= 0 && pos[0] < gameMap.GetLength(0) && pos[1] >= 0 && pos[1] < gameMap.GetLength(1);
         }
 
-        // Carves a two step path in the chosen direction
+        /// <summary>
+        /// Carves a two step path in the chosen direction
+        /// </summary>
         private void CarvePath(int[] direction, int[] direction2)
         {
             gameMap[direction[0], direction[1]] = blankSymbol.ToString();
             gameMap[direction2[0], direction2[1]] = blankSymbol.ToString();
         }
 
-        // Collects an array of all the available directions from the current position pos and returns it
+        /// <summary>
+        /// Collects an array of all the available directions from the current position pos and returns it.
+        /// </summary>
         private List<int[]> GetAvailableDirections(int[] pos, bool requiresWall)
         {
             List<int[]> availableDirections = new List<int[]>();
@@ -77,10 +91,14 @@ namespace Maze
             return availableDirections;
         }
 
-        // Checks if a direction is valid and adds it to the list of availableDirections
-        // A direction is valid two cells in that direction are within bounds and meet the wall conditions
-        // If requiresWall is true, both cells in that direction must be walls
-        // Otherwise the second cell must not be a wall, but the first cell can be anything
+
+
+        /// <summary>
+        /// Checks if a direction is valid and adds it to the list of availableDirections.
+        /// A direction is valid two cells in that direction are within bounds and meet the wall conditions.
+        /// If requiresWall is true, both cells in that direction must be walls.
+        /// Otherwise the second cell must not be a wall, but the first cell can be anything.
+        /// </summary>
         private void CheckDirection(int[] direction, int[] direction2, List<int[]> availableDirections, bool requiresWall)
         {
             if (requiresWall)
@@ -101,35 +119,52 @@ namespace Maze
             }
         }
 
-        // Not yet implemented
+
+        /// <summary>
+        /// Not yet implemented.
+        /// </summary>
         public void SetConfig()
         {
 
         }
         
         /// <summary>
-        /// Preloads the maze generation to allow for faster generation
+        /// Getter to prevent access to variables of StartPreloading
         /// </summary>
         public void PreloadGeneration()
+        {
+            StartPreloading();
+        }
+
+        /// <summary>
+        /// Preloads the maze generation to allow for faster generation
+        /// </summary>
+        private void StartPreloading()
         {
             string[,] tempArray = gameMap;
             gameMap = preloadGameMap;
             GenerateMaze();
+            isPreloading = false;
             gameMap = tempArray;
             Console.Clear();
         }
 
         /// <summary>
-        /// Initializing and commencing the maze generation 
+        /// Getter to prevent access to variables of InitializeMaze
         /// </summary>
         public void GenerateMaze()
         {
-            if (isActive) { return; } // Returns if the program is already generating a maze
+           InitializeMaze();
+        }
 
-            isActive = true;
+        /// <summary>
+        /// Initializes the maze generation and starts it
+        /// </summary>
+        private void InitializeMaze()
+        {
             hasEnded = false; // Ensures hasEnded is always false when generating a new maze
             Console.CursorVisible = false; // Hides the cursor
-            MazeBuilder.InitializeMap(gameMap, wallSymbol); // Initializes gameMap by filling it with walls
+            MazeBuilder.InitializeMap(); // Initializes gameMap by filling it with walls
 
             // Experimental
             //Console.SetWindowSize(gameMap.GetLength(1), gameMap.GetLength(0));
@@ -140,14 +175,15 @@ namespace Maze
 
             currentCoords = startCoords;
             gameMap[currentCoords[0], currentCoords[1]] = blankSymbol.ToString(); // Makes the start position blank
-            Kill(); 
+            Kill();
         }
 
-        // Searches from left to right after a cell with available neighbours and then continues to kill from the new cell
+
+        /// <summary>
+        /// Searches from left to right after a cell with available neighbours and then continues to kill from the new cell
+        /// </summary>
         private void Hunt()
         {
-            if (!isActive) { return; }
-
             // Loops through the gameMap from left to right
             for (int i = 0; i < gameMap.GetLength(0); i++)
             {
@@ -178,18 +214,19 @@ namespace Maze
             }
         }
 
-        // Clears and outputs the completed maze as well as showing additional information and randomizes the borders if set
+        /// <summary>
+        /// Clears and outputs the completed maze as well as showing additional information and randomizes the borders if set
+        /// </summary>
         private void EndGeneration()
         {
             hasEnded = true;
             Console.Clear();
 
             if (measureSpeed && stopwatch.IsRunning) { stopwatch.Stop();  } // Stops the stopwatch if measureSpeed is true and a stopwatch instance is running
-            if (doRandomizeBorders) { MazeBuilder.RandomizeBorders(gameMap,random, randomizeBordersChance, wallSymbol, blankSymbol); } // If doRandomizeBorders, wait for RandomizeBorders to finish randomizing the borders of gameMap
-            MazeBuilder.WriteMap(gameMap, coloredOutput, showProgress, hasEnded, outputColors, wallSymbol, blankSymbol);
+            if (doRandomizeBorders) { MazeBuilder.RandomizeBorders(); } // If doRandomizeBorders, wait for RandomizeBorders to finish randomizing the borders of gameMap
+            if (!isPreloading) { MazeBuilder.WriteMap(); }
 
             Console.WriteLine("\r\nGeneration complete.");
-            isActive = false;
 
             if (measureSpeed && stopwatch.Elapsed != TimeSpan.Zero) // If measureSpeed is true and stopwatch.Elapsed is not 0, aka it has recorded the time correctly, output the speed information
             {
@@ -199,11 +236,13 @@ namespace Maze
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         private void Kill()
         {
-            if (!isActive) { return; }
             if (delay > 0) { Thread.Sleep(delay); }
-            if (showProgress) { MazeBuilder.WriteMap(gameMap, coloredOutput, showProgress, hasEnded, outputColors, wallSymbol, blankSymbol); }
+            if (showProgress) { MazeBuilder.WriteMap(); }
 
             List<int[]> availableDirections = GetAvailableDirections(new int[] { currentCoords[0], currentCoords[1] }, true); // Gets the neighbours of the current coordinates that are walls and not out of bounds
 

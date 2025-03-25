@@ -1,85 +1,93 @@
-﻿#pragma warning disable IDE0300
-#pragma warning disable IDE0074
-
-using System;
-using System.Security;
+﻿#pragma warning disable IDE0300 // Simplify collection initialization
+#pragma warning disable IDE0074 // Use compound assignment
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
 
 namespace Maze
 {
     internal static class MazeBuilder
     {
-        public static char playerSymbol;
-        public static void InitializeMap(string[,] gameMap, char wallSymbol)
+        private static HuntAndKill maze;
+        private static bool hasSet = false;
+
+        public static void SetMazeClass(HuntAndKill huntAndKill)
         {
-            for (int i = 0; i < gameMap.GetLength(0); i++)
+            maze = huntAndKill;
+            hasSet = true;
+        }
+        
+        public static void InitializeMap()
+        {
+            if (!hasSet) { return; }
+            for (int i = 0; i < maze.gameMap.GetLength(0); i++)
             {
-                for (int j = 0; j < gameMap.GetLength(1); j++)
+                for (int j = 0; j < maze.gameMap.GetLength(1); j++)
                 {
-                    gameMap[i, j] = wallSymbol.ToString();
+                    maze.ModifyMap(new int[] { i, j }, maze.wallSymbol);
                 }
             }
         }
 
         // Randomizes each part of the border to allow for entrances and exits
-        public static void RandomizeBorders(string[,] gameMap, Random random, int[] randomizeBordersChance, char wallSymbol, char blankSymbol)
+        public static void RandomizeBorders()
         {
-            for (int i = 0; i < gameMap.GetLength(0); i++)
+            if (!hasSet) { return; }
+            for (int i = 0; i < maze.gameMap.GetLength(0); i++)
             {
-                for (int j = 0; j < gameMap.GetLength(1); j++)
+                for (int j = 0; j < maze.gameMap.GetLength(1); j++)
                 {
-                    if (i == 0 || i == gameMap.GetLength(0) - 1 || j == 0 || j == gameMap.GetLength(1) - 1)
+                    if (i == 0 || i == maze.gameMap.GetLength(0) - 1 || j == 0 || j == maze.gameMap.GetLength(1) - 1)
                     {
-                        int randomChance = random.Next(randomizeBordersChance[0], randomizeBordersChance[1]);
-                        if (randomChance == randomizeBordersChance[0])
+                        int randomChance = maze.random.Next(maze.borderRandomizationChance[0], maze.borderRandomizationChance[1]);
+                        if (randomChance == maze.borderRandomizationChance[0])
                         {
-                            gameMap[i, j] = blankSymbol.ToString();
+                            maze.ModifyMap(new int[] { i, j }, maze.blankSymbol);
                         }
                         else
                         {
-                            gameMap[i, j] = wallSymbol.ToString();
+                            maze.ModifyMap(new int[] { i, j }, maze.wallSymbol);
                         }
                     }
                 }
             }
         }
 
-        public static void WriteMap(string[,] gameMap, bool coloredOutput = false, bool showProgress = false, bool hasEnded = false, ConsoleColor[]? outputColors = null, char wallSymbol = '#', char blankSymbol = ' ')
+        public static void WriteMap()
         {
-            if (outputColors == null) { outputColors = new ConsoleColor[] { ConsoleColor.White, ConsoleColor.White, ConsoleColor.Blue }; } // Sets default value for outputColors
+            if (!hasSet) { return; }
 
-            for (int i = 0; i < gameMap.GetLength(0); i++)
+            for (int i = 0; i < maze.gameMap.GetLength(0); i++)
             {
                 Console.SetCursorPosition(0, i);
-                for (int j = 0; j < gameMap.GetLength(1); j++)
+                for (int j = 0; j < maze.gameMap.GetLength(1); j++)
                 {
-                    if (coloredOutput)
+                    if (maze.coloredOutput)
                     {
-                        if (gameMap[i, j] == blankSymbol.ToString())
+                        if (maze.gameMap[i, j] == maze.blankSymbol.ToString())
                         {
-                            Console.BackgroundColor = outputColors[0];
+                            Console.BackgroundColor = maze.outputColors[0];
                             Console.Write(" ");
                             Console.ResetColor();
                         }
-                        else if (gameMap[i, j] == wallSymbol.ToString())
+                        else if (maze.gameMap[i, j] == maze.wallSymbol.ToString())
                         {
-                            Console.BackgroundColor = outputColors[1];
+                            Console.BackgroundColor = maze.outputColors[1];
                             Console.Write(" ");
                             Console.ResetColor();
                         }
-                        else if (gameMap[i,j] == playerSymbol.ToString())
+                        else if (maze.gameMap[i,j] == maze.playerSymbol.ToString())
                         {
-                            Console.BackgroundColor = outputColors[2];
+                            Console.BackgroundColor = maze.outputColors[2];
                             Console.Write(" ");
                             Console.ResetColor();
                         }
                     }
                     else
                     {
-                        Console.Write(gameMap[i, j]);
+                        Console.Write(maze.gameMap[i, j]);
                     }
                 }
             }
-            if (showProgress && !hasEnded)
+            if (maze.showProgress && !maze.hasEnded)
             {
                 Console.WriteLine("\r\nGenerating maze");
                 Console.WriteLine("Note: The maze will generate slower due to showProgress being on.");

@@ -1,42 +1,31 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Dynamic;
-using System.Linq;
-using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
+﻿#pragma warning disable IDE1006 // Naming Styles
+#pragma warning disable IDE0300 // Simplify collection initialization
+#pragma warning disable IDE0290 // Use primary constructor
 
 namespace Maze
 {
     internal class Player
     {
         private int playerX, playerY;
-        private string[,] gameMap;
-        public bool isPlaying;
-        private char blankSymbol;
-        public char playerSymbol = 'X';
-        public ConsoleColor[] outputColors;
-        public bool coloredOutput;
+        public bool isPlaying { get; private set; } = false;
+        private readonly HuntAndKill maze;
 
-        public Player(string[,] map, char symbol)
+        public Player(HuntAndKill huntAndKill)
         {
-            gameMap = map;
-            blankSymbol = symbol;
+            maze = huntAndKill;
         }
 
-        public void StartPlayerMovement(int startX, int startY, HuntAndKill huntKillMaze)
+        public void StartPlayerMovement()
         {
-            outputColors = huntKillMaze.outputColors;
-            coloredOutput = huntKillMaze.coloredOutput;
-            MazeBuilder.playerSymbol = playerSymbol;
-            Console.WriteLine(startX + " " +  startY);
-            if (isValid(startY, startX))
+            Console.CursorVisible = false;
+            if (isValid(maze.startCoords[0], maze.startCoords[1]))
             {
-                gameMap[startY, startX] = playerSymbol.ToString();
-                playerX = startX;
-                playerY = startY;
+                maze.ModifyMap(new int[] { maze.startCoords[0], maze.startCoords[1] }, maze.playerSymbol);
+                playerY = maze.startCoords[0];
+                playerX = maze.startCoords[1];
+           
                 Console.Clear();
-                MazeBuilder.WriteMap(gameMap, coloredOutput, false, false, outputColors);
+                MazeBuilder.WriteMap();
                 isPlaying = true;
                 MovePlayer();
             }
@@ -48,7 +37,7 @@ namespace Maze
 
         private bool isValid(int y, int x)
         {
-            return (y >= 0 && y < gameMap.GetLength(0) && x >= 0 && x < gameMap.GetLength(1) && gameMap[y, x] == blankSymbol.ToString());
+            return (y >= 0 && y < maze.gameMap.GetLength(0) && x >= 0 && x < maze.gameMap.GetLength(1) && maze.gameMap[y, x] == maze.blankSymbol.ToString());
         }
 
         private void MovePlayer()
@@ -64,44 +53,40 @@ namespace Maze
                             int xLeft = playerX - 1;
                             if (isValid(playerY, xLeft))
                             {
-                                gameMap[playerY, playerX] = blankSymbol.ToString();
-                                gameMap[playerY, xLeft] = playerSymbol.ToString();
+                                maze.ModifyMap(new int[] { playerY, playerX }, maze.blankSymbol);
+                                maze.ModifyMap(new int[] { playerY, xLeft}, maze.playerSymbol);
                                 playerX = xLeft;
-                                Console.Clear();
-                                MazeBuilder.WriteMap(gameMap, coloredOutput, false, false, outputColors);
+                                MazeBuilder.WriteMap();
                             }
                             break;
                         case ConsoleKey.D:
                             int xRight = playerX + 1;
                             if (isValid(playerY, xRight))
                             {
-                                gameMap[playerY, playerX] = blankSymbol.ToString();
-                                gameMap[playerY, xRight] = playerSymbol.ToString();
+                                maze.ModifyMap(new int[] { playerY, playerX }, maze.blankSymbol);
+                                maze.ModifyMap(new int[] { playerY, xRight }, maze.playerSymbol);
                                 playerX = xRight;
-                                Console.Clear();
-                                MazeBuilder.WriteMap(gameMap, coloredOutput, false, false, outputColors);
+                                MazeBuilder.WriteMap();
                             }
                             break;
                         case ConsoleKey.W:
                             int yUp = playerY - 1;
                             if (isValid(yUp, playerX))
                             {
-                                gameMap[playerY, playerX] = blankSymbol.ToString();
-                                gameMap[yUp, playerX] = playerSymbol.ToString();
+                                maze.ModifyMap(new int[] { playerY, playerX }, maze.blankSymbol);
+                                maze.ModifyMap(new int[] { yUp, playerX }, maze.playerSymbol);
                                 playerY = yUp;
-                                Console.Clear();
-                                MazeBuilder.WriteMap(gameMap, coloredOutput, false, false, outputColors);
+                                MazeBuilder.WriteMap();
                             }
                             break;
                         case ConsoleKey.S:
                             int yDown = playerY + 1;
                             if (isValid(yDown, playerX))
                             {
-                                gameMap[playerY, playerX] = blankSymbol.ToString();
-                                gameMap[yDown, playerX] = playerSymbol.ToString();
+                                maze.ModifyMap(new int[] { playerY, playerX }, maze.blankSymbol);
+                                maze.ModifyMap(new int[] { yDown, playerX }, maze.playerSymbol);
                                 playerY = yDown;
-                                Console.Clear();
-                                MazeBuilder.WriteMap(gameMap, coloredOutput, false, false, outputColors);
+                                MazeBuilder.WriteMap();
                             }
                             break;
                         case ConsoleKey.Spacebar:

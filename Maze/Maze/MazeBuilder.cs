@@ -2,8 +2,6 @@
 #pragma warning disable IDE0074 // Use compound assignment
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
 
-using System.Runtime.CompilerServices;
-
 namespace Maze
 {
     internal static class MazeBuilder
@@ -57,7 +55,6 @@ namespace Maze
 
         public static void WriteMap(bool isWalking = false)
         {
-            Console.WriteLine("hi");
             if (!hasSet) { return; }
 
             for (int i = 0; i < maze.gameMap.GetLength(0); i++)
@@ -74,7 +71,7 @@ namespace Maze
                             Console.Write(" ");
                             Console.ResetColor();
                         }
-                        else if (maze.gameMap[i, j] == config.GetValue("blankSymbol").ToString())
+                        else if (maze.gameMap[i, j] == config.GetValue("wallSymbol").ToString())
                         {
                             Console.BackgroundColor = outputColors[1];
                             Console.Write(" ");

@@ -148,6 +148,7 @@ namespace Maze
         /// </summary>
         private void InitializeMaze()
         {
+            gameMap = (string[,])config.GetValue("gameMap");
             hasEnded = false; // Ensures hasEnded is always false when generating a new maze
             Console.CursorVisible = false; // Hides the cursor
             MazeBuilder.InitializeMap(); // Initializes gameMap by filling it with walls
@@ -236,7 +237,6 @@ namespace Maze
             int delay = (int)config.GetValue("delay");
             if (delay != 0) { Thread.Sleep(delay); }
             if ((bool)config.GetValue("showProgress")) { MazeBuilder.WriteMap(); }
-            Console.WriteLine("hi");
 
             List<int[]> availableDirections = GetAvailableDirections(new int[] { currentCoords[0], currentCoords[1] }, true); // Gets the neighbours of the current coordinates that are walls and not out of bounds
 

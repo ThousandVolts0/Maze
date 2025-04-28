@@ -21,11 +21,11 @@ namespace Maze
             configValues = new Dictionary<string, object>
             {
                 { "delay", 0 },
-                { "doRandomizeBorders", true },
-                { "coloredOutput", true },
+                { "doRandomizeBorders", false },
+                { "coloredOutput", false },
                 { "showProgress", false },
                 { "isPreloading", false },
-                { "measureSpeed", true },
+                { "measureSpeed", false },
                 { "wallSymbol", '#' },
                 { "blankSymbol", ' ' },
                 { "playerSymbol", 'X' },

@@ -13,8 +13,9 @@ namespace Maze
         static void Main()
         {
             Console.OutputEncoding = System.Text.Encoding.UTF8;
-            HuntAndKill huntKillMaze = new HuntAndKill();
             ConfigData config = new ConfigData();
+            HuntAndKill huntKillMaze = new HuntAndKill();
+            huntKillMaze.SetConfig(config);
             Player player = new Player(huntKillMaze, config);
             MazeBuilder.SetMazeClass(huntKillMaze, config);
             //huntKillMaze.PreloadGeneration();

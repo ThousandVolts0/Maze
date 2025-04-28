@@ -156,6 +156,7 @@ namespace Maze
             //Console.SetWindowSize(gameMap.GetLength(1), gameMap.GetLength(0));
             //Console.SetBufferSize(gameMap.GetLength(1), gameMap.GetLength(0));
 
+
             if (!(bool)config.GetValue("showProgress")) { Console.WriteLine("Generating maze"); }
             if ((bool)config.GetValue("showProgress")) { stopwatch.Reset(); stopwatch.Start(); } // Starts the timer if measureSpeed is true
 
@@ -235,6 +236,7 @@ namespace Maze
             int delay = (int)config.GetValue("delay");
             if (delay != 0) { Thread.Sleep(delay); }
             if ((bool)config.GetValue("showProgress")) { MazeBuilder.WriteMap(); }
+            Console.WriteLine("hi");
 
             List<int[]> availableDirections = GetAvailableDirections(new int[] { currentCoords[0], currentCoords[1] }, true); // Gets the neighbours of the current coordinates that are walls and not out of bounds
 

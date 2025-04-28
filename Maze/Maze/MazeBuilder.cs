@@ -22,6 +22,10 @@ namespace Maze
         public static void InitializeMap()
         {
             if (!hasSet) { return; }
+            if (maze.gameMap == null)
+            {
+                Console.WriteLine("hey");
+            }
             for (int i = 0; i < maze.gameMap.GetLength(0); i++)
             {
                 for (int j = 0; j < maze.gameMap.GetLength(1); j++)
@@ -53,6 +57,7 @@ namespace Maze
 
         public static void WriteMap(bool isWalking = false)
         {
+            Console.WriteLine("hi");
             if (!hasSet) { return; }
 
             for (int i = 0; i < maze.gameMap.GetLength(0); i++)

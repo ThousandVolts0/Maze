@@ -10,6 +10,7 @@ namespace Maze
     {
         private int playerX, playerY;
         public bool isPlaying { get; private set; } = false;
+        bool configSet = false;
         private ConfigData config;
         private readonly HuntAndKill maze;
 
@@ -19,15 +20,24 @@ namespace Maze
             maze = huntAndKill;
         }
 
+        public bool checkForMaze()
+        {
+            if (maze.gameMap != null)
+            {
+                return true;
+            }
+            return false;
+        }
+
         public void StartPlayerMovement()
         {
+            if (maze.gameMap == null) { throw new InvalidOperationException("Tried to start play mode before generating a maze!"); }
             Console.CursorVisible = false;
-            int[] startCoords = (int[])config.GetValue("startCoords");
-            if (startCoords == null) { throw new NullReferenceException("Startcoords is null"); }
+            int[] startCoords = config.GetValue<int[]>("startCoords");
 
             if (isValid(startCoords[0], startCoords[1]))
             {
-                maze.ModifyMap(new int[] { startCoords[0], startCoords[1] }, config.GetValue("playerSymbol"));
+                maze.ModifyMap(new int[] { startCoords[0], startCoords[1] }, config.GetValue<char>("playerSymbol"));
                 playerY = startCoords[0];
                 playerX = startCoords[1];
            
@@ -44,7 +54,7 @@ namespace Maze
 
         private bool isValid(int y, int x)
         {
-            return (y >= 0 && y < maze.gameMap.GetLength(0) && x >= 0 && x < maze.gameMap.GetLength(1) && maze.gameMap[y, x] == (string)config.GetValue("blankSymbol"));
+            return (y >= 0 && y < maze.gameMap.GetLength(0) && x >= 0 && x < maze.gameMap.GetLength(1) && maze.gameMap[y, x] == config.GetValue<char>("blankSymbol").ToString());
         }
 
         private void MovePlayer()
@@ -65,8 +75,8 @@ namespace Maze
                             int xLeft = playerX - 1;
                             if (isValid(playerY, xLeft))
                             {
-                                maze.ModifyMap(new int[] { playerY, playerX }, config.GetValue("blankSymbol"));
-                                maze.ModifyMap(new int[] { playerY, xLeft}, config.GetValue("playerSymbol"));
+                                maze.ModifyMap(new int[] { playerY, playerX }, config.GetValue<char>("blankSymbol"));
+                                maze.ModifyMap(new int[] { playerY, xLeft}, config.GetValue<char>("playerSymbol"));
                                 playerX = xLeft;
                                 
                             }
@@ -75,8 +85,8 @@ namespace Maze
                             int xRight = playerX + 1;
                             if (isValid(playerY, xRight))
                             {
-                                maze.ModifyMap(new int[] { playerY, playerX }, config.GetValue("blankSymbol"));
-                                maze.ModifyMap(new int[] { playerY, xRight }, config.GetValue("playerSymbol"));
+                                maze.ModifyMap(new int[] { playerY, playerX }, config.GetValue<char>("blankSymbol"));
+                                maze.ModifyMap(new int[] { playerY, xRight }, config.GetValue<char>("playerSymbol"));
                                 playerX = xRight;
                             }
                             break;
@@ -84,8 +94,8 @@ namespace Maze
                             int yUp = playerY - 1;
                             if (isValid(yUp, playerX))
                             {
-                                maze.ModifyMap(new int[] { playerY, playerX }, config.GetValue("blankSymbol"));
-                                maze.ModifyMap(new int[] { yUp, playerX }, config.GetValue("playerSymbol"));
+                                maze.ModifyMap(new int[] { playerY, playerX }, config.GetValue<char>("blankSymbol"));
+                                maze.ModifyMap(new int[] { yUp, playerX }, config.GetValue<char>("playerSymbol"));
                                 playerY = yUp;
                             }
                             break;
@@ -93,8 +103,8 @@ namespace Maze
                             int yDown = playerY + 1;
                             if (isValid(yDown, playerX))
                             {
-                                maze.ModifyMap(new int[] { playerY, playerX }, config.GetValue("blankSymbol"));
-                                maze.ModifyMap(new int[] { yDown, playerX }, config.GetValue("playerSymbol"));
+                                maze.ModifyMap(new int[] { playerY, playerX }, config.GetValue<char>("blankSymbol"));
+                                maze.ModifyMap(new int[] { yDown, playerX }, config.GetValue<char>("playerSymbol"));
                                 playerY = yDown;
                             }
                             break;

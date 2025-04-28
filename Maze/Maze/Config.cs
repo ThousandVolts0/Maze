@@ -25,7 +25,7 @@ namespace Maze
                 { "coloredOutput", false },
                 { "showProgress", false },
                 { "isPreloading", false },
-                { "measureSpeed", false },
+                { "measureSpeed", true },
                 { "wallSymbol", '#' },
                 { "blankSymbol", ' ' },
                 { "playerSymbol", 'X' },
@@ -42,17 +42,24 @@ namespace Maze
             return configValues;
         }
 
-        public object? GetValue(string key)
+        public TValue GetValue<TValue>(string key)
         {
             if (configValues.ContainsKey(key))
             {
                 configValues.TryGetValue(key, out var value);
-                return value;
+                if (value is TValue tValue)
+                {
+                    return tValue;
+                }
+                else
+                {
+                    throw new InvalidCastException($"Value for {key} is not of type {typeof(TValue).Name}");
+                }
             }
             else
             {
                 Console.WriteLine(key + " was not found in the config.");
-                return null;
+                throw new ArgumentNullException($"{key} was not found in config");
             }
         }
 

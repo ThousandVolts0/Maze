@@ -16,6 +16,7 @@ namespace Maze
             ConfigData config = new ConfigData();
             HuntAndKill huntKillMaze = new HuntAndKill();
             huntKillMaze.SetConfig(config);
+            huntKillMaze.PreloadGeneration();
             Player player = new Player(huntKillMaze, config);
             MazeBuilder.SetMazeClass(huntKillMaze, config);
             //huntKillMaze.PreloadGeneration();

@@ -15,6 +15,9 @@ namespace Maze
     {
 
         private static HuntAndKill huntKillMaze;
+        private static string backText = "Go back to main menu? (y/n)";
+        private static string exitText = "Thank you for using my Maze Generator, Goodbye!";
+        private static string invalidText = "Invalid input, please try again";
         private static Player player;
         private static List<ConsoleColor> colorThing = new List<ConsoleColor> { ConsoleColor.Red, ConsoleColor.Blue, ConsoleColor.Green };
         private static string[] menuParts = new string[]
@@ -83,54 +86,71 @@ namespace Maze
             while (validInput == false)
             {
                 input = Console.ReadLine().ToCharArray()[0];
-                if (char.IsNumber(input))
+                if (char.IsNumber(input) && char.GetNumericValue(input) <= 4)
                 {
                     validInput = true;
-                }
-                else
-                {
-                    Console.WriteLine("Input was not in the correct format. Please try again.");
                     continue;
                 }
+                Console.WriteLine(invalidText);
             }
 
-            if (input == '1')
+            switch (input)
             {
-                Console.Clear();
-                huntKillMaze.GenerateMaze();
+                case '1':
+                    Console.Clear();
+                    huntKillMaze.GenerateMaze();
+                    break;
+                case '2':
+                    Console.Clear();
+                    if (player.checkForMaze())
+                    {
+                        player.StartPlayerMovement();
+                    }
+                    else
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine("Can't enter play mode before generating a maze!");
+                        Console.ResetColor();
+                        GoBackToMenu();
+                        //Thread.Sleep(1250);
+                        //ShowMenu();
+                    }
+                    break;
+                case '3':
+                    Console.WriteLine("Not yet implemented");
+                    break;
+                case '4':
+                    Console.WriteLine(exitText);
+                    return;
             }
-            else if (input == '2')
-            {
-                Console.Clear();
-                player.StartPlayerMovement();
-            }
-            else if (input == '3')
-            {
-                Console.WriteLine("Not yet implemented");
-            }
-            else if (input == '4')
-            {
-                return;
-            }
+
         }
 
         public static void GoBackToMenu()
         {
-            string input;
-            Console.WriteLine("Go back to main menu? (y/n)");
+            Console.WriteLine(backText);
             Console.CursorVisible = true;
 
-            while ((input = Console.ReadLine().Trim().ToLower()) != "y" && input != "n")
+            bool valid = false;
+            while (!valid)
             {
-                Console.WriteLine("Invalid input, please try again.");
+                char input = Console.ReadLine().ToLower().ToCharArray()[0];
+                if (input == 'y')
+                {
+                    valid = true;
+                    ShowMenu();
+                }
+                else if (input == 'n')
+                {
+                    valid = true;
+                    Console.WriteLine(exitText);
+                }
+                else
+                {
+                    Console.WriteLine(invalidText);
+                }
+               
             }
-            if (input == "y")
-            {
-                ShowMenu();
-                return;
-            }
-
-            Console.WriteLine("Thank you for using my Maze Generator, Goodbye!");
         }
     }
 }

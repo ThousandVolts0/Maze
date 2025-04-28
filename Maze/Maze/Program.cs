@@ -10,51 +10,23 @@ namespace Maze
 {
     internal class Program
     {
-        //[DllImport("user32.dll", CharSet = CharSet.Auto)]
-        //static extern int MessageBox(IntPtr hWnd, String text, String caption, uint type);
         static void Main()
         {
+            Console.OutputEncoding = System.Text.Encoding.UTF8;
             HuntAndKill huntKillMaze = new HuntAndKill();
-            MazeBuilder.SetMazeClass(huntKillMaze);
-            huntKillMaze.PreloadGeneration();
-            huntKillMaze.GenerateMaze();
+            ConfigData config = new ConfigData();
+            Player player = new Player(huntKillMaze, config);
+            MazeBuilder.SetMazeClass(huntKillMaze, config);
+            //huntKillMaze.PreloadGeneration();
+            MainMenu.SetClass(huntKillMaze, player);
+            MainMenu.ShowMenu();
 
-            //Generate new maze question
-            while (true)
-            {
-                Console.WriteLine("Would you like to generate a new maze?");
-                Console.CursorVisible = true;
-                string input = Console.ReadLine().ToLower();
-                if (input == "y" || input == "yes")
-                {
-                    Console.Clear();
-                    huntKillMaze.GenerateMaze();
-                }
-                else
-                {
-                    return;
-                }
-            }
+            //huntKillMaze.GenerateMaze();
 
-            // Message box question
-            //int input = MessageBox(IntPtr.Zero, "Would you like to walk through the maze?", "Maze", 4);
             //Console.CursorVisible = true;
-            //if (input == 6)
+            //while (true)
             //{
-            //    Player player = new Player(huntKillMaze.gameMap, huntKillMaze.blankSymbol);
-            //    player.StartPlayerMovement(huntKillMaze.startCoords[0], huntKillMaze.startCoords[1], huntKillMaze);
-            //}
 
-            //Movement system question
-            //Console.CursorVisible = true;
-            //Console.WriteLine("Would you like to walk through the maze?");
-
-            //string input = Console.ReadLine().ToLower();
-
-            //if (input == "yes" || input == "y")
-            //{
-            //    Player player = new Player(huntKillMaze);
-            //    player.StartPlayerMovement();
             //}
 
         }

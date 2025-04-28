@@ -2,16 +2,20 @@
 #pragma warning disable IDE0074 // Use compound assignment
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
 
+using System.Runtime.CompilerServices;
+
 namespace Maze
 {
     internal static class MazeBuilder
     {
         private static HuntAndKill maze;
+        private static ConfigData config;
         private static bool hasSet = false;
 
-        public static void SetMazeClass(HuntAndKill huntAndKill)
+        public static void SetMazeClass(HuntAndKill huntAndKill, ConfigData Config)
         {
             maze = huntAndKill;
+            config = Config;
             hasSet = true;
         }
         
@@ -22,7 +26,7 @@ namespace Maze
             {
                 for (int j = 0; j < maze.gameMap.GetLength(1); j++)
                 {
-                    maze.ModifyMap(new int[] { i, j }, maze.wallSymbol);
+                    maze.ModifyMap(new int[] { i, j }, config.GetValue("wallSymbol").ToString());
                 }
             }
         }
@@ -37,21 +41,17 @@ namespace Maze
                 {
                     if (i == 0 || i == maze.gameMap.GetLength(0) - 1 || j == 0 || j == maze.gameMap.GetLength(1) - 1)
                     {
-                        int randomChance = maze.random.Next(maze.borderRandomizationChance[0], maze.borderRandomizationChance[1]);
-                        if (randomChance == maze.borderRandomizationChance[0])
-                        {
-                            maze.ModifyMap(new int[] { i, j }, maze.blankSymbol);
-                        }
-                        else
-                        {
-                            maze.ModifyMap(new int[] { i, j }, maze.wallSymbol);
-                        }
+                        int[] randomizationChance = (int[])config.GetValue("borderRandomizationChance") ?? throw new InvalidCastException();
+                        int randomChance = maze.random.Next(randomizationChance[0], randomizationChance[1]);
+
+                        string symbol = (randomChance == randomizationChance[0]) ? config.GetValue("blankSymbol").ToString() : config.GetValue("wallSymbol").ToString();
+                        maze.ModifyMap(new int[] { i, j }, symbol);
                     }
                 }
             }
         }
 
-        public static void WriteMap()
+        public static void WriteMap(bool isWalking = false)
         {
             if (!hasSet) { return; }
 
@@ -60,23 +60,24 @@ namespace Maze
                 Console.SetCursorPosition(0, i);
                 for (int j = 0; j < maze.gameMap.GetLength(1); j++)
                 {
-                    if (maze.coloredOutput)
+                    if ((bool)config.GetValue("coloredOutput"))
                     {
-                        if (maze.gameMap[i, j] == maze.blankSymbol.ToString())
+                        ConsoleColor[] outputColors = (ConsoleColor[])config.GetValue("outputColors");
+                        if (maze.gameMap[i, j] == config.GetValue("blankSymbol").ToString())
                         {
-                            Console.BackgroundColor = maze.outputColors[0];
+                            Console.BackgroundColor = outputColors[0];
                             Console.Write(" ");
                             Console.ResetColor();
                         }
-                        else if (maze.gameMap[i, j] == maze.wallSymbol.ToString())
+                        else if (maze.gameMap[i, j] == config.GetValue("blankSymbol").ToString())
                         {
-                            Console.BackgroundColor = maze.outputColors[1];
+                            Console.BackgroundColor = outputColors[1];
                             Console.Write(" ");
                             Console.ResetColor();
                         }
-                        else if (maze.gameMap[i,j] == maze.playerSymbol.ToString())
+                        else if (maze.gameMap[i,j] == config.GetValue("playerSymbol").ToString())
                         {
-                            Console.BackgroundColor = maze.outputColors[2];
+                            Console.BackgroundColor = outputColors[2];
                             Console.Write(" ");
                             Console.ResetColor();
                         }
@@ -87,9 +88,13 @@ namespace Maze
                     }
                 }
             }
-            if (maze.showProgress && !maze.hasEnded)
+            if (isWalking)
             {
-                Console.WriteLine("\r\nGenerating maze");
+                Console.WriteLine("\r\nPress space to exit out of the maze.");
+            }
+            if ((bool)config.GetValue("showProgress") && !maze.hasEnded)
+            {
+                Console.WriteLine("\r\nGenerating maze...");
                 Console.WriteLine("Note: The maze will generate slower due to showProgress being on.");
                 Console.WriteLine("For best results, disable showProgress.");
             }

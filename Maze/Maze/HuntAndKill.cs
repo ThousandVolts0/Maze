@@ -1,12 +1,14 @@
 ﻿using System.Diagnostics;
+using System.Diagnostics.SymbolStore;
 
 #pragma warning disable IDE0300 // Simplify collection initialization
 #pragma warning disable IDE0079 // Remove unnecessary suppresion
 #pragma warning disable CA1822  // Mark members as static
 #pragma warning disable IDE0028 // Simplify colllection initialization
-#pragma warning disable IDE0090 // Use 'new(...)''
+#pragma warning disable IDE0090 // Use 'new(...)'
 #pragma warning disable IDE1006 // Naming Styles
 #pragma warning disable IDE0044 // Add readonly modifier
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
 
 namespace Maze
 {
@@ -15,28 +17,13 @@ namespace Maze
         /* ---------------------------------------------------------------------------------- */
 
         // GAME MAP & COORDINATES
-        public string[,] gameMap { get; private set; } = new string[21, 39];
-        private string[,] preloadGameMap = new string[5, 5];
-        public int[] startCoords { get; private set; } = new int[] { 1, 1 };
+        public string[,] gameMap { get; private set; }
         private int[] currentCoords = new int[] { 1, 1 };
+        public bool isPreloading = false;
+        private ConfigData config;
 
         // GAME STATE
         public bool hasEnded { get; private set; } = false;
-
-        // CONFIGURATION
-        private int delay = 0;
-        private bool doRandomizeBorders = false;
-        public bool coloredOutput { get; private set; } = true;
-        public bool showProgress { get; private set; } = false;
-        private bool isPreloading = true;
-        private bool measureSpeed = true;
-        public char wallSymbol { get; private set; } = '#';
-        public char blankSymbol { get; private set; } = ' ';
-        public char playerSymbol { get; private set; } = 'X';
-        public ConsoleColor[] outputColors { get; private set; } = new ConsoleColor[] { ConsoleColor.Black, ConsoleColor.DarkGray, ConsoleColor.Blue };
-
-        // RANDOMIZATION CHANCES
-        public int[] borderRandomizationChance { get; private set; } = new int[] { 1, 8 };
 
         // UTILITY
         public Random random { get; private set; } = new Random();
@@ -49,12 +36,12 @@ namespace Maze
         /// </summary>
         private bool isWall(int[] pos)
         {
-            return (gameMap[pos[0], pos[1]] == wallSymbol.ToString());
+            return (gameMap[pos[0], pos[1]] == config.GetValue("wallSymbol").ToString());
         }
 
-        public void ModifyMap(int[] pos, char symbol)
+        public void ModifyMap(int[] pos, object symbol)
         {
-            gameMap[pos[0], pos[1]] = symbol.ToString();
+            gameMap[pos[0], pos[1]] = (string)symbol;
         }
 
         /// <summary>
@@ -70,8 +57,8 @@ namespace Maze
         /// </summary>
         private void CarvePath(int[] direction, int[] direction2)
         {
-            gameMap[direction[0], direction[1]] = blankSymbol.ToString();
-            gameMap[direction2[0], direction2[1]] = blankSymbol.ToString();
+            gameMap[direction[0], direction[1]] = config.GetValue("blankSymbol").ToString();
+            gameMap[direction2[0], direction2[1]] = config.GetValue("blankSymbol").ToString();
         }
 
         /// <summary>
@@ -90,8 +77,6 @@ namespace Maze
 
             return availableDirections;
         }
-
-
 
         /// <summary>
         /// Checks if a direction is valid and adds it to the list of availableDirections.
@@ -119,13 +104,12 @@ namespace Maze
             }
         }
 
-
         /// <summary>
         /// Not yet implemented.
         /// </summary>
-        public void SetConfig()
+        public void SetConfig(ConfigData config)
         {
-
+            this.config = config;
         }
         
         /// <summary>
@@ -142,11 +126,13 @@ namespace Maze
         private void StartPreloading()
         {
             string[,] tempArray = gameMap;
-            gameMap = preloadGameMap;
+            var preloadGameMapValue = config.GetValue("preloadGameMap") ?? throw new ArgumentNullException("preloadGameMap is null");
+            gameMap = (string[,])preloadGameMapValue;
+
+            isPreloading = true;
             GenerateMaze();
-            isPreloading = false;
             gameMap = tempArray;
-            Console.Clear();
+            isPreloading = false;
         }
 
         /// <summary>
@@ -170,11 +156,11 @@ namespace Maze
             //Console.SetWindowSize(gameMap.GetLength(1), gameMap.GetLength(0));
             //Console.SetBufferSize(gameMap.GetLength(1), gameMap.GetLength(0));
 
-            if (!showProgress) { Console.WriteLine("Generating maze"); }
-            if (measureSpeed) { stopwatch.Reset(); stopwatch.Start(); } // Starts the timer if measureSpeed is true
+            if (!(bool)config.GetValue("showProgress")) { Console.WriteLine("Generating maze"); }
+            if ((bool)config.GetValue("showProgress")) { stopwatch.Reset(); stopwatch.Start(); } // Starts the timer if measureSpeed is true
 
-            currentCoords = startCoords;
-            gameMap[currentCoords[0], currentCoords[1]] = blankSymbol.ToString(); // Makes the start position blank
+            currentCoords = (int[])config.GetValue("startCoords");
+            gameMap[currentCoords[0], currentCoords[1]] = config.GetValue("blankSymbol").ToString(); // Makes the start position blank
             Kill();
         }
 
@@ -190,7 +176,7 @@ namespace Maze
                 for (int j = 0; j < gameMap.GetLength(1); j++)
                 {
                     // If i and j are odd and are represented by # on gameMap
-                    if (gameMap[i, j] == wallSymbol.ToString() && i % 2 != 0 && j % 2 != 0)
+                    if (gameMap[i, j] == config.GetValue("wallSymbol").ToString() && i % 2 != 0 && j % 2 != 0)
                     {
                         List<int[]> availableDirections = GetAvailableDirections(new int[] { i, j }, false);
 
@@ -200,7 +186,7 @@ namespace Maze
                             int randomIndex = random.Next(availableDirections.Count); // Generates a random index of availableDirections
                             int[] chosenDirection = availableDirections[randomIndex]; // The direction in availableDirections chosen by the random index
                             currentCoords = chosenDirection; // Sets the current position to the newly chosen direction
-                            gameMap[currentCoords[0], currentCoords[1]] = blankSymbol.ToString(); // Sets the current position in gameMap to the chosen blank symbol
+                            gameMap[currentCoords[0], currentCoords[1]] = config.GetValue("blankSymbol").ToString(); // Sets the current position in gameMap to the chosen blank symbol
                             Kill(); // Continue the maze generation
                             return; // Stops the for loops
                         }
@@ -222,17 +208,22 @@ namespace Maze
             hasEnded = true;
             Console.Clear();
 
-            if (measureSpeed && stopwatch.IsRunning) { stopwatch.Stop();  } // Stops the stopwatch if measureSpeed is true and a stopwatch instance is running
-            if (doRandomizeBorders) { MazeBuilder.RandomizeBorders(); } // If doRandomizeBorders, wait for RandomizeBorders to finish randomizing the borders of gameMap
-            if (!isPreloading) { MazeBuilder.WriteMap(); }
-
-            Console.WriteLine("\r\nGeneration complete.");
-
-            if (measureSpeed && stopwatch.Elapsed != TimeSpan.Zero) // If measureSpeed is true and stopwatch.Elapsed is not 0, aka it has recorded the time correctly, output the speed information
+            if (!isPreloading)
             {
-                Console.WriteLine("\r\n----- Speed measurement -----");
-                Console.WriteLine("Seconds: " + Math.Round(stopwatch.Elapsed.TotalSeconds, 3));
-                Console.WriteLine("Milliseconds: " + Math.Round(stopwatch.Elapsed.TotalMilliseconds, 3) + "\r\n");
+                if ((bool)config.GetValue("measureSpeed") && stopwatch.IsRunning) { stopwatch.Stop(); } // Stops the stopwatch if measureSpeed is true and a stopwatch instance is running
+                if ((bool)config.GetValue("doRandomizeBorders")) { MazeBuilder.RandomizeBorders(); } // If doRandomizeBorders, wait for RandomizeBorders to finish randomizing the borders of gameMap
+                MazeBuilder.WriteMap();
+
+                Console.WriteLine("\r\nGeneration complete.");
+
+                if ((bool)config.GetValue("measureSpeed") && stopwatch.Elapsed != TimeSpan.Zero) // If measureSpeed is true and stopwatch.Elapsed is not 0, aka it has recorded the time correctly, output the speed information
+                {
+                    Console.WriteLine("\r\n----- Speed measurement -----");
+                    Console.WriteLine("Seconds: " + Math.Round(stopwatch.Elapsed.TotalSeconds, 3));
+                    Console.WriteLine("Milliseconds: " + Math.Round(stopwatch.Elapsed.TotalMilliseconds, 3) + "\r\n");
+                }
+
+                MainMenu.GoBackToMenu();
             }
         }
 
@@ -241,8 +232,9 @@ namespace Maze
         /// </summary>
         private void Kill()
         {
-            if (delay > 0) { Thread.Sleep(delay); }
-            if (showProgress) { MazeBuilder.WriteMap(); }
+            int delay = (int)config.GetValue("delay");
+            if (delay != 0) { Thread.Sleep(delay); }
+            if ((bool)config.GetValue("showProgress")) { MazeBuilder.WriteMap(); }
 
             List<int[]> availableDirections = GetAvailableDirections(new int[] { currentCoords[0], currentCoords[1] }, true); // Gets the neighbours of the current coordinates that are walls and not out of bounds
 

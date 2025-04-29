@@ -13,24 +13,7 @@ namespace Maze
         static void Main()
         {
             Console.OutputEncoding = System.Text.Encoding.UTF8;
-            ConfigData config = new ConfigData();
-            HuntAndKill huntKillMaze = new HuntAndKill();
-            huntKillMaze.SetConfig(config);
-            huntKillMaze.PreloadGeneration();
-            Player player = new Player(huntKillMaze, config);
-            MazeBuilder.SetMazeClass(huntKillMaze, config);
-            //huntKillMaze.PreloadGeneration();
-            MainMenu.SetClass(huntKillMaze, player);
-            MainMenu.ShowMenu();
-
-            //huntKillMaze.GenerateMaze();
-
-            //Console.CursorVisible = true;
-            //while (true)
-            //{
-
-            //}
-
+            MazeGenerator maze = new MazeGenerator();
         }
     }
     

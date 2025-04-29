@@ -8,21 +8,18 @@ namespace Maze
 {
     internal static class MazeBuilder
     {
-        private static HuntAndKill maze;
+        private static MazeGenerator maze;
         private static ConfigData config;
-        private static bool hasSet = false;
 
-        public static void SetMazeClass(HuntAndKill huntAndKill, ConfigData Config)
+        public static void Setup(MazeGenerator huntAndKill, ConfigData Config)
         {
             maze = huntAndKill;
             config = Config;
-            hasSet = true;
         }
         
         public static void InitializeMap()
         {
-            if (!hasSet) { return; }
-            if (maze == null || maze.gameMap == null) { throw new NullReferenceException("maze or gameMap is null"); }
+            if (maze == null || maze.gameMap == null) { return; }
 
             for (int i = 0; i < maze.gameMap.GetLength(0); i++)
             {
@@ -36,7 +33,8 @@ namespace Maze
         // Randomizes each part of the border to allow for entrances and exits
         public static void RandomizeBorders()
         {
-            if (!hasSet) { return; }
+            if (maze == null || maze.gameMap == null) { return; }
+
             for (int i = 0; i < maze.gameMap.GetLength(0); i++)
             {
                 for (int j = 0; j < maze.gameMap.GetLength(1); j++)
@@ -55,7 +53,7 @@ namespace Maze
 
         public static void WriteMap(bool isWalking = false)
         {
-            if (!hasSet) { return; }
+            if (maze == null || maze.gameMap == null) { return; }
 
             for (int i = 0; i < maze.gameMap.GetLength(0); i++)
             {

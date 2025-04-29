@@ -12,7 +12,7 @@ using System.Diagnostics.SymbolStore;
 
 namespace Maze
 {
-    internal class HuntAndKill
+    internal class MazeGenerator
     {
         /* ---------------------------------------------------------------------------------- */
 
@@ -20,7 +20,6 @@ namespace Maze
         public string[,] gameMap { get; private set; }
         private int[] currentCoords = new int[] { 1, 1 };
         public bool isPreloading = false;
-        private bool configSet = false;
         private ConfigData config;
 
         // GAME STATE
@@ -31,6 +30,19 @@ namespace Maze
         private Stopwatch stopwatch = new Stopwatch();
 
         /* ---------------------------------------------------------------------------------- */
+
+        public MazeGenerator()
+        {
+            ConfigData config = new ConfigData();
+            this.config = config;
+
+            MazePlayer player = new MazePlayer(this, config);
+            MazeBuilder.Setup(this, config);
+            MainMenu.Setup(this, player);
+
+            Preload();
+            MainMenu.ShowMenu();
+        }
 
         /// <summary>
         /// If pos in gameMap is a wall, return true
@@ -106,18 +118,9 @@ namespace Maze
         }
 
         /// <summary>
-        /// Not yet implemented.
-        /// </summary>
-        public void SetConfig(ConfigData config)
-        {
-            this.config = config;
-            configSet = true;
-        }
-        
-        /// <summary>
         /// Getter to prevent access to variables of StartPreloading
         /// </summary>
-        public void PreloadGeneration()
+        public void Preload()
         {
             StartPreloading();
         }
@@ -127,7 +130,6 @@ namespace Maze
         /// </summary>
         private void StartPreloading()
         {
-            if (!configSet) { throw new InvalidOperationException("Config was not set when initializing maze generation"); }
             string[,] tempArray = gameMap;
             gameMap = config.GetValue<string[,]>("preloadGameMap");
 
@@ -142,31 +144,40 @@ namespace Maze
         /// </summary>
         public void GenerateMaze()
         {
-           InitializeMaze();
-        }
-
-        /// <summary>
-        /// Initializes the maze generation and starts it
-        /// </summary>
-        private void InitializeMaze()
-        {
-            if (!configSet) { throw new InvalidOperationException("Config was not set when initializing maze generation"); }
-            gameMap = config.GetValue<string[,]>("gameMap");
-            hasEnded = false; // Ensures hasEnded is always false when generating a new maze
-            Console.CursorVisible = false; // Hides the cursor
+            hasEnded = false;
+            if (!isPreloading) { gameMap = config.GetValue<string[,]>("gameMap"); }
             MazeBuilder.InitializeMap(); // Initializes gameMap by filling it with walls
-
-            // Experimental
-            //Console.SetWindowSize(gameMap.GetLength(1), gameMap.GetLength(0));
-            //Console.SetBufferSize(gameMap.GetLength(1), gameMap.GetLength(0));
-
-
-            if (!config.GetValue<bool>("showProgress")) { Console.WriteLine("Generating maze"); }
-            if (config.GetValue<bool>("showProgress")) { stopwatch.Reset(); stopwatch.Start(); } // Starts the timer if measureSpeed is true
+            if (config.GetValue<bool>("measureSpeed"))
+            {
+                stopwatch.Reset(); 
+                stopwatch.Start();
+            }
+            else
+            {
+                Console.WriteLine("Generating maze");
+            }
+            Console.CursorVisible = false;
+            if (gameMap.GetLength(0) >= Console.BufferHeight)
+            {
+                Console.SetBufferSize(Console.BufferWidth, gameMap.GetLength(0));
+            }
+            if (gameMap.GetLength(1) >= Console.BufferWidth)
+            {
+                Console.SetBufferSize(gameMap.GetLength(1), Console.BufferHeight);
+            }
+            Console.WriteLine(Console.BufferHeight + " " + Console.BufferWidth);
 
             currentCoords = config.GetValue<int[]>("startCoords");
-            gameMap[currentCoords[0], currentCoords[1]] = config.GetValue<char>("blankSymbol").ToString(); // Makes the start position blank
-            Kill();
+            if (isWithinBounds(new int[] { Math.Abs(currentCoords[0]), Math.Abs(currentCoords[1]) }))
+            {
+                gameMap[Math.Abs(currentCoords[0]), Math.Abs(currentCoords[1])] = config.GetValue<char>("blankSymbol").ToString(); // Makes the start position blank
+                Kill();
+            }
+            else
+            {
+                throw new InvalidOperationException("startCoords is not within gameMap");
+            }
+            
         }
 
         /// <summary>
@@ -216,7 +227,7 @@ namespace Maze
             {
                 if (config.GetValue<bool>("measureSpeed") && stopwatch.IsRunning) { stopwatch.Stop(); } // Stops the stopwatch if measureSpeed is true and a stopwatch instance is running
                 if (config.GetValue<bool>("doRandomizeBorders")) { MazeBuilder.RandomizeBorders(); } // If doRandomizeBorders, wait for RandomizeBorders to finish randomizing the borders of gameMap
-                MazeBuilder.WriteMap();
+                MazeBuilder.WriteMap(false);
 
                 Console.WriteLine("\r\nGeneration complete.");
 
@@ -238,7 +249,7 @@ namespace Maze
         {
             int delay = config.GetValue<int>("delay");
             if (delay != 0) { Thread.Sleep(delay); }
-            if (config.GetValue<bool>("showProgress")) { MazeBuilder.WriteMap(); }
+            if (config.GetValue<bool>("showProgress") && !isPreloading) { MazeBuilder.WriteMap(); }
 
             List<int[]> availableDirections = GetAvailableDirections(new int[] { currentCoords[0], currentCoords[1] }, true); // Gets the neighbours of the current coordinates that are walls and not out of bounds
 

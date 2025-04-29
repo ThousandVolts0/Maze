@@ -31,9 +31,9 @@ namespace Maze
                 { "playerSymbol", 'X' },
                 { "outputColors", new ConsoleColor[] { ConsoleColor.Black, ConsoleColor.DarkGray, ConsoleColor.Blue } },
                 { "borderRandomizationChance", new int[] { 1, 8 } },
-                { "gameMap", new string[21, 39] },
+                { "gameMap", new string[21, 39] }, // Safe limit is 115 x 115
                 { "preloadGameMap", new string[5, 5] },
-                { "startCoords", new int[] { 1, 1 } }
+                { "startCoords", new int[] { -1, -1 } }
             };
         }
 
@@ -42,7 +42,7 @@ namespace Maze
             return configValues;
         }
 
-        public TValue GetValue<TValue>(string key)
+        public readonly TValue GetValue<TValue>(string key)
         {
             if (configValues.ContainsKey(key))
             {

@@ -6,21 +6,20 @@
 
 namespace Maze
 {
-    internal class Player
+    internal class MazePlayer
     {
         private int playerX, playerY;
         public bool isPlaying { get; private set; } = false;
-        bool configSet = false;
-        private ConfigData config;
-        private readonly HuntAndKill maze;
+        private readonly ConfigData config;
+        private readonly MazeGenerator maze;
 
-        public Player(HuntAndKill huntAndKill, ConfigData config)
+        public MazePlayer(MazeGenerator huntAndKill, ConfigData config)
         {
             this.config = config;
             maze = huntAndKill;
         }
 
-        public bool checkForMaze()
+        public bool HasGenerated()
         {
             if (maze.gameMap != null)
             {
@@ -35,20 +34,20 @@ namespace Maze
             Console.CursorVisible = false;
             int[] startCoords = config.GetValue<int[]>("startCoords");
 
-            if (isValid(startCoords[0], startCoords[1]))
+            if (isValid(Math.Abs(startCoords[0]), Math.Abs(startCoords[1])))
             {
-                maze.ModifyMap(new int[] { startCoords[0], startCoords[1] }, config.GetValue<char>("playerSymbol"));
-                playerY = startCoords[0];
-                playerX = startCoords[1];
+                maze.ModifyMap(new int[] { Math.Abs(startCoords[0]), Math.Abs(startCoords[1]) }, config.GetValue<char>("playerSymbol"));
+                playerY = Math.Abs(startCoords[0]);
+                playerX = Math.Abs(startCoords[1]);
            
                 Console.Clear();
                 MazeBuilder.WriteMap();
                 isPlaying = true;
-                MovePlayer();
+                ListenForInput();
             }
             else
             {
-                Console.WriteLine("Start pos is not valid, play mode will not start");
+                throw new InvalidOperationException("Start coords are invalid"); 
             }
         }
 
@@ -57,12 +56,7 @@ namespace Maze
             return (y >= 0 && y < maze.gameMap.GetLength(0) && x >= 0 && x < maze.gameMap.GetLength(1) && maze.gameMap[y, x] == config.GetValue<char>("blankSymbol").ToString());
         }
 
-        private void MovePlayer()
-        {
-            MovePlayer(config);
-        }
-
-        private void MovePlayer(ConfigData config)
+        private void ListenForInput()
         {
             while (isPlaying)
             {
@@ -110,6 +104,7 @@ namespace Maze
                             break;
                         case ConsoleKey.Spacebar:
                             Console.WriteLine("\r\nYou exited out of play mode.");
+                            maze.ModifyMap(new int[] { playerY, playerX }, config.GetValue<char>("blankSymbol"));
                             isPlaying = false;
                             MainMenu.GoBackToMenu();
                             break;

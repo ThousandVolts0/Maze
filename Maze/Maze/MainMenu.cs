@@ -1,24 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Channels;
-using System.Threading.Tasks;
-
-#pragma warning disable CS8602 // Dereference of a possibly null reference.
+﻿#pragma warning disable CS8602 // Dereference of a possibly null reference.
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
-
 
 namespace Maze
 {
     internal static class MainMenu
     {
 
-        private static HuntAndKill huntKillMaze;
-        private static string backText = "Go back to main menu? (y/n)";
+        private static MazeGenerator huntKillMaze;
+        private static string backText = "Go back to main menu?";
         private static string exitText = "Thank you for using my Maze Generator, Goodbye!";
         private static string invalidText = "Invalid input, please try again";
-        private static Player player;
+        private static MazePlayer player;
         private static List<ConsoleColor> colorThing = new List<ConsoleColor> { ConsoleColor.Red, ConsoleColor.Blue, ConsoleColor.Green };
         private static string[] menuParts = new string[]
         {
@@ -32,40 +24,11 @@ namespace Maze
             "╚════════════════════════╝"
         };
 
-        public static void SetClass(HuntAndKill huntAndKill, Player plr)
+        public static void Setup(MazeGenerator huntAndKill, MazePlayer plr)
         {
             huntKillMaze = huntAndKill;
             player = plr;
         }
-
-        //private static void doColorThing(bool validInput)
-        //{
-        //    while (!validInput)
-        //    {
-        //        Console.SetCursorPosition(0, 0);
-        //        int j = 0;
-        //        for (int i = 0; i < menuParts.Length; i++)
-        //        {
-        //            Thread.Sleep(30);
-        //            Console.ForegroundColor = colorThing[j];
-        //            ConsoleColor[] tempArray = new ConsoleColor[] { colorThing[j] };
-        //            colorThing.Remove(colorThing[j]);
-        //            colorThing.Add(tempArray[0]);
-        //            Console.Write(menuParts[i]);
-        //            Console.WriteLine();
-
-        //            if (j < colorThing.Count - 1)
-        //            {
-        //                j++;
-        //            }
-        //            else
-        //            {
-        //                j = 0;
-        //            }
-                    
-        //        }
-        //    }
-        //}
 
         public static void ShowMenu()
         {
@@ -78,6 +41,8 @@ namespace Maze
             }
 
             Console.Write("Select an option: ");
+
+            char[] inputArray;
             char input = ' ';
             bool validInput = false;
             
@@ -85,13 +50,29 @@ namespace Maze
 
             while (validInput == false)
             {
-                input = Console.ReadLine().ToCharArray()[0];
-                if (char.IsNumber(input) && char.GetNumericValue(input) <= 4)
+                inputArray = Console.ReadLine().Trim().ToCharArray();
+                
+
+                if (inputArray.Length > 0)
                 {
-                    validInput = true;
-                    continue;
+                    input = inputArray[0];
+                    if (char.IsNumber(input) && char.GetNumericValue(input) <= 4)
+                    {
+                        validInput = true;
+                        Console.WriteLine("a");
+                        continue;
+                    }
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine(invalidText);
+                    Console.ResetColor();
                 }
-                Console.WriteLine(invalidText);
+                else
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine(invalidText);
+                    Console.ResetColor();
+                }
+               
             }
 
             switch (input)
@@ -102,7 +83,7 @@ namespace Maze
                     break;
                 case '2':
                     Console.Clear();
-                    if (player.checkForMaze())
+                    if (player.HasGenerated())
                     {
                         player.StartPlayerMovement();
                     }
@@ -112,12 +93,12 @@ namespace Maze
                         Console.WriteLine("Can't enter play mode before generating a maze!");
                         Console.ResetColor();
                         GoBackToMenu();
-                        //Thread.Sleep(1250);
-                        //ShowMenu();
                     }
                     break;
                 case '3':
+                    Console.ForegroundColor = ConsoleColor.Red;
                     Console.WriteLine("Not yet implemented");
+                    Console.ResetColor();
                     break;
                 case '4':
                     Console.WriteLine(exitText);
@@ -128,28 +109,50 @@ namespace Maze
 
         public static void GoBackToMenu()
         {
-            Console.WriteLine(backText);
+            Console.Write(backText);
+            Console.Write("(");
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.Write("y");
+            Console.ResetColor();
+            Console.Write("/");
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.Write("n");
+            Console.ResetColor();
+            Console.Write(")");
+            Console.WriteLine();
             Console.CursorVisible = true;
 
             bool valid = false;
             while (!valid)
             {
-                char input = Console.ReadLine().ToLower().ToCharArray()[0];
-                if (input == 'y')
+                char[] inputArray = Console.ReadLine().Trim().ToLower().ToCharArray();
+                
+                if (inputArray.Length > 0)
                 {
-                    valid = true;
-                    ShowMenu();
-                }
-                else if (input == 'n')
-                {
-                    valid = true;
-                    Console.WriteLine(exitText);
+                    char input = inputArray[0];
+                    if (input == 'y')
+                    {
+                        valid = true;
+                        ShowMenu();
+                    }
+                    else if (input == 'n')
+                    {
+                        valid = true;
+                        Console.WriteLine(exitText);
+                    }
+                    else
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine(invalidText);
+                        Console.ResetColor();
+                    }
                 }
                 else
                 {
+                    Console.ForegroundColor = ConsoleColor.Red;
                     Console.WriteLine(invalidText);
+                    Console.ResetColor();
                 }
-               
             }
         }
     }

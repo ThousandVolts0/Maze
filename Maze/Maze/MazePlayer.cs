@@ -110,7 +110,7 @@ namespace Maze
                             break;
                     }
                 }
-                MazeBuilder.WriteMap(true);
+                if (isPlaying) { MazeBuilder.WriteMap(true); }
             }
         }
     }

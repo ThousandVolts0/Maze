@@ -88,16 +88,21 @@ namespace Maze
                     }
                 }
             }
+            
             if (isWalking)
             {
                 Console.WriteLine("\r\nPress space to exit out of the maze.");
             }
-            if (config.GetValue<bool>("showProgress") && !maze.hasEnded)
+            if (!maze.hasEnded)
             {
                 Console.WriteLine("\r\nGenerating maze...");
-                Console.WriteLine("Note: The maze will generate slower due to showProgress being on.");
-                Console.WriteLine("For best results, disable showProgress.");
+                if (config.GetValue<bool>("showProgress"))
+                {
+                    Console.WriteLine("Maze generator will generate slower due to showProgress being on.");
+                    Console.WriteLine("For best results, disable showProgress.");
+                }
             }
+            
         }
     }
 }

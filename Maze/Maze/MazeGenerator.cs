@@ -147,14 +147,10 @@ namespace Maze
             hasEnded = false;
             if (!isPreloading) { gameMap = config.GetValue<string[,]>("gameMap"); }
             MazeBuilder.InitializeMap(); // Initializes gameMap by filling it with walls
-            if (config.GetValue<bool>("measureSpeed"))
+            if (config.GetValue<bool>("measureSpeed") && !isPreloading)
             {
                 stopwatch.Reset(); 
                 stopwatch.Start();
-            }
-            else
-            {
-                Console.WriteLine("Generating maze");
             }
             Console.CursorVisible = false;
             if (gameMap.GetLength(0) >= Console.BufferHeight)
@@ -165,7 +161,8 @@ namespace Maze
             {
                 Console.SetBufferSize(gameMap.GetLength(1), Console.BufferHeight);
             }
-            Console.WriteLine(Console.BufferHeight + " " + Console.BufferWidth);
+
+            if (!config.GetValue<bool>("showProgress")) { Console.WriteLine("Generating maze..."); }
 
             currentCoords = config.GetValue<int[]>("startCoords");
             if (isWithinBounds(new int[] { Math.Abs(currentCoords[0]), Math.Abs(currentCoords[1]) }))
@@ -248,7 +245,7 @@ namespace Maze
         private void Kill()
         {
             int delay = config.GetValue<int>("delay");
-            if (delay != 0) { Thread.Sleep(delay); }
+            if (delay != 0 && !isPreloading) { Thread.Sleep(delay); }
             if (config.GetValue<bool>("showProgress") && !isPreloading) { MazeBuilder.WriteMap(); }
 
             List<int[]> availableDirections = GetAvailableDirections(new int[] { currentCoords[0], currentCoords[1] }, true); // Gets the neighbours of the current coordinates that are walls and not out of bounds

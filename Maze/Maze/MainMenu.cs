@@ -11,7 +11,6 @@ namespace Maze
         private static string exitText = "Thank you for using my Maze Generator, Goodbye!";
         private static string invalidText = "Invalid input, please try again";
         private static MazePlayer player;
-        private static List<ConsoleColor> colorThing = new List<ConsoleColor> { ConsoleColor.Red, ConsoleColor.Blue, ConsoleColor.Green };
         private static string[] menuParts = new string[]
         {
             "╔════════════════════════╗",
@@ -42,8 +41,7 @@ namespace Maze
 
             Console.Write("Select an option: ");
 
-            char[] inputArray;
-            char input = ' ';
+            char[] inputArray = {' '};
             bool validInput = false;
             
             Console.CursorVisible = true;
@@ -52,14 +50,11 @@ namespace Maze
             {
                 inputArray = Console.ReadLine().Trim().ToCharArray();
                 
-
                 if (inputArray.Length > 0)
                 {
-                    input = inputArray[0];
-                    if (char.IsNumber(input) && char.GetNumericValue(input) <= 4)
+                    if (char.IsNumber(inputArray[0]) && char.GetNumericValue(inputArray[0]) <= 4)
                     {
                         validInput = true;
-                        Console.WriteLine("a");
                         continue;
                     }
                     Console.ForegroundColor = ConsoleColor.Red;
@@ -75,7 +70,7 @@ namespace Maze
                
             }
 
-            switch (input)
+            switch (inputArray[0])
             {
                 case '1':
                     Console.Clear();
@@ -97,8 +92,10 @@ namespace Maze
                     break;
                 case '3':
                     Console.ForegroundColor = ConsoleColor.Red;
+                    Console.Clear();
                     Console.WriteLine("Not yet implemented");
                     Console.ResetColor();
+                    GoBackToMenu();
                     break;
                 case '4':
                     Console.WriteLine(exitText);

@@ -38,9 +38,9 @@ namespace Maze
 
             MazePlayer player = new MazePlayer(this, config);
             MazeBuilder.Setup(this, config);
-            MainMenu.Setup(this, player);
+            MainMenu.Setup(this, player, config);
 
-            Preload();
+            StartPreloading();
             MainMenu.ShowMenu();
         }
 
@@ -52,7 +52,7 @@ namespace Maze
             return (gameMap[pos[0], pos[1]] == config.GetValue<char>("wallSymbol").ToString());
         }
 
-        public void ModifyMap(int[] pos, object symbol)
+        internal void ModifyMap(int[] pos, object symbol)
         {
             gameMap[pos[0], pos[1]] = symbol.ToString();
         }
@@ -118,14 +118,6 @@ namespace Maze
         }
 
         /// <summary>
-        /// Getter to prevent access to variables of StartPreloading
-        /// </summary>
-        public void Preload()
-        {
-            StartPreloading();
-        }
-
-        /// <summary>
         /// Preloads the maze generation to allow for faster generation
         /// </summary>
         private void StartPreloading()
@@ -149,7 +141,7 @@ namespace Maze
             MazeBuilder.InitializeMap(); // Initializes gameMap by filling it with walls
             if (config.GetValue<bool>("measureSpeed") && !isPreloading)
             {
-                stopwatch.Reset(); 
+                stopwatch.Reset();
                 stopwatch.Start();
             }
             Console.CursorVisible = false;

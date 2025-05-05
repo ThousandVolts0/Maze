@@ -1,6 +1,9 @@
 ﻿#pragma warning disable CS8602 // Dereference of a possibly null reference.
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
 
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
+
 namespace Maze
 {
     internal static class MainMenu
@@ -10,6 +13,7 @@ namespace Maze
         private static string backText = "Go back to main menu?";
         private static string exitText = "Thank you for using my Maze Generator, Goodbye!";
         private static string invalidText = "Invalid input, please try again";
+        private static ConfigData config;
         private static MazePlayer player;
         private static string[] menuParts = new string[]
         {
@@ -23,9 +27,10 @@ namespace Maze
             "╚════════════════════════╝"
         };
 
-        public static void Setup(MazeGenerator huntAndKill, MazePlayer plr)
+        public static void Setup(MazeGenerator huntAndKill, MazePlayer plr, ConfigData newConfig)
         {
             huntKillMaze = huntAndKill;
+            config = newConfig;
             player = plr;
         }
 
@@ -93,7 +98,8 @@ namespace Maze
                 case '3':
                     Console.ForegroundColor = ConsoleColor.Red;
                     Console.Clear();
-                    Console.WriteLine("Not yet implemented");
+                    ShowSettings();
+                    ChangeSettings();
                     Console.ResetColor();
                     GoBackToMenu();
                     break;
@@ -101,7 +107,114 @@ namespace Maze
                     Console.WriteLine(exitText);
                     return;
             }
+        }
 
+        public static void ShowSettings()
+        {
+            Console.Clear();
+            Console.ResetColor();
+            Console.WriteLine("----- Available settings -----");
+            Dictionary<string, object> variables = config.GetVariables();
+            foreach (var item in variables)
+            {
+                Console.Write("- " + item.Key + ": ");
+                if (item.Value is Array array)
+                {
+                    Type? type = array.GetType().GetElementType();
+                    if (array.Rank == 1)
+                    {
+                        int length = array.Length;
+                        Console.Write($"new {type.Name}[{length}]" + " { ");
+                        for (int i = 0; i < length; i++)
+                        {
+                            if (i == length - 1)
+                            {
+                                Console.Write(array.GetValue(i).ToString() + " }\n");
+                            }
+                            else
+                            {
+                                Console.Write(array.GetValue(i).ToString() + ", ");
+                            }
+                        }
+                    }
+                    else if (array.Rank == 2)
+                    {
+                        int xLength = array.GetLength(0);
+                        int yLength = array.GetLength(1);
+                        Console.Write($"new {type.Name}[{yLength}, {xLength}]\n");
+                    }
+                }
+                else
+                {
+                    Console.Write(item.Value.ToString() + "\n");
+                }
+                
+            }
+            Console.WriteLine("------------------------------");
+            Console.WriteLine("Type a variable and then its corresponding value to change it.");
+            Console.WriteLine("To go back, type 'back'.");
+            Console.WriteLine("------------------------------");
+        }
+
+        private static void ChangeSettings()
+        {
+            Dictionary<string, object> variables = config.GetVariables();
+            bool active = true;
+            while (active)
+            {
+                Console.Write("\n\rInput: ");
+                string? input = Console.ReadLine();
+                if (input == null) { Console.WriteLine("Invalid input, try again."); continue; }
+                if (input.ToLower() == "back")
+                {
+                    active = false;
+                    ShowMenu();
+                }
+
+                string[] parts = input.Split(' ');
+
+                if (parts.Length < 2)
+                {
+                    Console.WriteLine("Invalid input, try again.");
+                    continue;
+                }
+
+                string key = parts[0];
+                string value = parts[1];
+
+                if (!variables.ContainsKey(parts[0]))
+                {
+                    Console.WriteLine($"Variable {key} not found, try again.");
+                    continue;
+                }
+
+                if (!variables.TryGetValue(key, out object? configValue) || configValue == null)
+                {
+                    Console.WriteLine($"Value {value} for key {key} not found, try again.");
+                    continue;
+                }
+
+                if (configValue.GetType().IsArray)
+                {
+                    Console.WriteLine("Array support not added yet.");
+                    continue;
+                }
+                TypeConverter converter = TypeDescriptor.GetConverter(configValue.GetType());
+                if (!converter.IsValid(value))
+                {
+                    Console.WriteLine("Invalid value, try again.");
+                }
+                object? convertedValue = converter.ConvertFromString(value);
+                if (convertedValue == null || convertedValue.GetType() != configValue.GetType())
+                {
+                    Console.WriteLine("Value is null or not matching.");
+                    continue;
+                }
+
+                config.SetValue(parts[0], convertedValue);
+                ShowSettings();
+                Console.WriteLine($"Sucessfully set {key} to {convertedValue.ToString()}.");
+            }
         }
 
         public static void GoBackToMenu()
@@ -136,6 +249,7 @@ namespace Maze
                     {
                         valid = true;
                         Console.WriteLine(exitText);
+                        Environment.Exit(0);
                     }
                     else
                     {

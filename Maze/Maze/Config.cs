@@ -21,7 +21,7 @@ namespace Maze
             configValues = new Dictionary<string, object>
             {
                 { "delay", 0 },
-                { "doRandomizeBorders", true },
+                { "doRandomizeBorders", false },
                 { "coloredOutput", false },
                 { "showProgress", false },
                 { "measureSpeed", true },
@@ -30,7 +30,7 @@ namespace Maze
                 { "playerSymbol", 'X' },
                 { "outputColors", new ConsoleColor[] { ConsoleColor.Black, ConsoleColor.DarkGray, ConsoleColor.Blue } },
                 { "borderRandomizationChance", new int[] { 1, 8 } },
-                { "gameMap", new string[21, 39] }, // Safe limit is 115 x 115, larger sizes might cause stack overflow
+                { "gameMap", new string[19, 19] }, // Safe limit is 115 x 115, larger sizes might cause stack overflow
                 { "preloadGameMap", new string[5, 5] },
                 { "startCoords", new int[] { 1, 1 } }
             };

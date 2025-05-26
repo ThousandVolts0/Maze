@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Maze;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -12,41 +13,68 @@ using System.Threading.Tasks;
 
 namespace Maze
 {
-    public struct ConfigData
+    /// <summary>
+    /// Class for each entry in the config dictionary
+    /// </summary>
+    public class ConfigEntry
     {
-        private Dictionary<string, object> configValues;
+        public object value { get; set; }
 
-        public ConfigData()
+        public bool read_only { get; }
+        public string description { get; }
+
+        public ConfigEntry(object val, bool read_only = false, string desc = "")
         {
-            configValues = new Dictionary<string, object>
+            this.value = val;
+            this.read_only = read_only;
+            this.description = desc;
+        }
+    }
+
+    public static class ConfigData
+    {
+        private static Dictionary<string, ConfigEntry> configValues;
+
+        /// <summary>
+        /// Static constructor where the default variable and their values are saved
+        /// </summary>
+        static ConfigData()
+        {
+            configValues = new Dictionary<string, ConfigEntry>
             {
-                { "delay", 0 },
-                { "doRandomizeBorders", false },
-                { "coloredOutput", false },
-                { "showProgress", false },
-                { "measureSpeed", true },
-                { "wallSymbol", '#' },
-                { "blankSymbol", ' ' },
-                { "playerSymbol", 'X' },
-                { "outputColors", new ConsoleColor[] { ConsoleColor.Black, ConsoleColor.DarkGray, ConsoleColor.Blue } },
-                { "borderRandomizationChance", new int[] { 1, 8 } },
-                { "gameMap", new string[19, 19] }, // Safe limit is 115 x 115, larger sizes might cause stack overflow
-                { "preloadGameMap", new string[5, 5] },
-                { "startCoords", new int[] { 1, 1 } }
+                { "delay", new ConfigEntry(0) },
+                { "doRandomizeBorders", new ConfigEntry(false) },
+                { "coloredOutput", new ConfigEntry(false) },
+                { "showProgress", new ConfigEntry(false) },
+                { "measureSpeed", new ConfigEntry(true) },
+                { "wallSymbol", new ConfigEntry('#') },
+                { "blankSymbol", new ConfigEntry(' ') },
+                { "playerSymbol", new ConfigEntry('X') },
+                { "outputColors", new ConfigEntry(new ConsoleColor[] { ConsoleColor.Black, ConsoleColor.DarkGray, ConsoleColor.Blue }) },
+                { "borderRandomizationChance", new ConfigEntry(new int[] { 1, 8 }) },
+                { "gameMap", new ConfigEntry(new string[115, 115], true) }, // Safe limit is 115 x 115, larger sizes might cause stack overflow
+                { "preloadGameMap", new ConfigEntry(new string[5, 5], true) },
+                { "startCoords", new ConfigEntry(new int[] {1, 1}) }
             };
         }
 
-        public readonly Dictionary<string, object> GetVariables()
+        /// <summary>
+        /// Gets all the variables and their values from the config
+        /// </summary>
+        public static Dictionary<string, ConfigEntry> GetVariables()
         {
             return configValues;
         }
 
-        public readonly TValue GetValue<TValue>(string key)
+        /// <summary>
+        /// Method to retrieve a value in the config from a specific key
+        /// </summary>
+        public static TValue GetValue<TValue>(string key)
         {
             if (configValues.ContainsKey(key))
             {
-                configValues.TryGetValue(key, out var value);
-                if (value is TValue tValue)
+                var entry = configValues[key];
+                if (entry.value is TValue tValue)
                 {
                     return tValue;
                 }
@@ -57,16 +85,27 @@ namespace Maze
             }
             else
             {
-                Console.WriteLine(key + " was not found in the config.");
                 throw new ArgumentNullException($"{key} was not found in config");
             }
         }
 
-        public readonly void SetValue(string key, object value)
+        /// <summary>
+        /// Method to set a value for a key in the config
+        /// </summary>
+        public static void SetValue(string key, object value)
         {
             if (configValues.ContainsKey(key))
             {
-                configValues[key] = value;
+                Console.WriteLine(value.ToString());
+                var entry = configValues[key];
+                if (!entry.read_only)
+                {
+                    entry.value = value;
+                }
+                else
+                {
+                    Console.WriteLine($"{key}' is read-only, cannot be modified");
+                }
             }
             else
             {
